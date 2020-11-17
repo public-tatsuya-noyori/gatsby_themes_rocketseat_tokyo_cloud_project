@@ -1,0 +1,223 @@
+---
+title: 'Cloud project'
+description: Cloud project
+---
+
+# Publish/Subscribe/Clone on cloud (not using MQPs).
+
+## Evaluation
+
+Publish/Subscribe/Clone on cloud (not using MQPs) has been being evaluated by using the following resources.
+
+- [wis-jma](https://www.wis-jma.go.jp/data/subscribe) to download all GTS data on Tokyo.
+- [HP EliteDesk 800 G5 SFF](https://www.amazon.com/HP-EliteDesk-800-G5-Computer/dp/B085DNKWST) as a local PC.
+- 3 [wasabi cloud regions](https://wasabi.com/connectivity-options/) as follows.
+  - ap-northeast-1 region of Wasabi cloud to publish [open data](https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data/) and [closed data](https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.closed.data/).
+  - us-east-1 region of Wasabi cloud to clone [open data](https://s3.wasabisys.com/japan.meteorological.agency.open.data.us.east.1/) and [closed data](https://s3.wasabisys.com/japan.meteorological.agency.closed.data.us.east.1/).
+  - eu-central-1 region of Wasabi cloud to subscribe [open data](https://s3.eu-central-1.wasabisys.com/japan.meteorological.agency.open.data.eu.central.1) and [closed data](https://s3.eu-central-1.wasabisys.com/japan.meteorological.agency.closed.data.eu.central.1).
+
+The diagram of the data flow to evaluate Publish/Subscribe/Clone on cloud is as follows.
+
+![data_flow_diagram](cloud_project_img/data_flow_diagram.png)
+
+The data files published/cloned in each region can be explored by using the following aws-js-s3-explorers.
+
+- [ap-northeast-1 explorer](https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/ap-northeast-1.html)
+- [us-east-1 explorer](https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/us-east-1.html)
+- [eu-central-1 explorer](https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/eu-central-1.html)
+
+The data files are classified by the following priority and classification.
+
+| priority | classification          |
+| -------- | ----------------------- |
+| p1       | warning                 |
+| p2       | Alphanumeric/CREX/IWXXM |
+| p3       | BUFR(not satellite)     |
+| p4       | satellite(BUFR/HDF5)    |
+| p5       | GRIB                    |
+
+The prioritized and classified data files are indexed in the "4PubSub" directory. The directory of '4PubSub' is as follows by using the above aws-js-s3-explorer.
+
+![4pubsub](cloud_project_img/4pubsub.png)
+
+There are priority directories of "p1", "p2", "p3", "p4" and "p5" in the directory of "4PubSub" as follows. 
+
+![4pubsub_priority](cloud_project_img/4pubsub_priority.png)
+
+There are index files with the file name of the created datetime in each priority directories as follows.
+
+![4pubsub_priority_p1](cloud_project_img/4pubsub_priority_p1.png)
+
+The index file is a list of links to the created data files as follows.
+
+![4pubsub_priority_p1_index_file](cloud_project_img/4pubsub_priority_p1_index_file.png)
+
+In this evaluation, all GTS data files are published/subscribed/cloned using the '4PubSub' directory without MQPs. The average/maximum transfer time of the prioritized and classified data files are as follows.
+
+| priority | execution interval | average transfer time(2020/10/21)<br/>(local PC -> ap-northeast -> us-east -> eu-central) | maximum transfer time(2020/10/21)<br/>(local PC -> ap-northeast -> us-east -> eu-central) | The number of open data<br/>files(2020/10/21) | The number of parallel transfers |
+| -------- | ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------- | -------------------------------- |
+| p1       | 15s                | 35s                                                          | 68s                                                          | 405                                           | 4                                |
+| p2       | 1m                 | 3m5s                                                         | 3m47s                                                        | 31655                                         | 8                                |
+| p3       | 1m                 | 3m5s                                                         | 4m0s                                                         | 35074                                         | 16                               |
+| p4       | 1m                 | 3m19s                                                        | 18m7s                                                        | 155355                                        | 64                               |
+| p5       | 1m                 | 15m30s                                                       | 29m1s                                                        | 47763                                         | 32                               |
+
+## How to publish/subscribe/clone on cloud
+
+### Install rclone
+
+[Reference](https://rclone.org/install/)
+
+```bash
+curl https://rclone.org/install.sh | sudo bash
+```
+
+### Configure rclone
+
+```bash
+vi $HOME/.config/rclone/rclone.conf
+
+[wasabi]
+type = s3
+env_auth = false
+access_key_id =
+secret_access_key =
+region =
+endpoint = https://s3.ap-northeast-1.wasabisys.com
+location_constraint =
+acl = public-read
+server_side_encryption =
+storage_class =
+[wasabi_us]
+type = s3
+env_auth = false
+access_key_id =
+secret_access_key =
+region =
+endpoint = https://s3.us-east-1.wasabisys.com
+location_constraint =
+acl = public-read
+server_side_encryption =
+storage_class =
+[wasabi_eu]
+type = s3
+env_auth = false
+access_key_id =
+secret_access_key =
+region =
+endpoint = https://s3.eu-central-1.wasabisys.com
+location_constraint =
+acl = public-read
+server_side_encryption =
+storage_class =
+
+:wq
+```
+
+### Install pub.sh/sub.sh/clone.sh
+
+Download [pub.sh](https://raw.githubusercontent.com/public-tatsuya-noyori/meteorological_preprocessor/master/src/meteorological_preprocessor/pub.sh)/[sub.sh](https://raw.githubusercontent.com/public-tatsuya-noyori/meteorological_preprocessor/master/src/meteorological_preprocessor/sub.sh)/[clone.sh](https://raw.githubusercontent.com/public-tatsuya-noyori/meteorological_preprocessor/master/src/meteorological_preprocessor/clone.sh)
+
+### Configure Cron
+
+A sample configuration of the Cron to subscribe p3 data files are as follows.
+
+```bash
+crontab -e
+
+* * * * * /path_to_sh/sub.sh --cron /path_to_local_work_directory/cache wasabi_open_data_p3 wasabi japan.meteorological.agency.open.data p3 16 1>>/path_to_local_work_directory/log/sub_wasabi_open_data_p3_stdout.log 2>>/path_to_local_work_directory/log/sub_wasabi_open_data_p3_stderr.log
+
+:wq
+```
+
+A sample configuration of Cron to subscribe p1 data with urgent mode(execution interval = 15 seconds) from eu-central-1 region is as follows.
+
+```bash
+$ crontab -e
+
+* * * * * /path_to_sh/sub.sh --cron --urgent /path_to_local_work_directory/cache wasabi_eu_open_data_p1 wasabi_eu japan.meteorological.agency.open.data.eu.central.1 p1 4 1>>/path_to_local_work_directory/log/sub_wasabi_eu_open_data_p1_stdout.log 2>>/path_to_local_work_directory/log/sub_wasabi_eu_open_data_p1_stderr.log
+
+:wq
+```
+
+A sample configuration of Cron to subscribe Alphanumeric SYNOP/SHIP without Japan data from eu-central-1 region is as follows.
+
+```bash
+$ vi inclusive_pattern.txt
+
+/alphanumeric/surface/synop/
+/alphanumeric/surface/ship/
+
+:wq
+
+$ vi exclusive_pattern.txt
+
+/R[JO][A-Z][A-Z]/
+
+:wq
+
+$ crontab -e
+
+* * * * * /path_to_sh/sub.sh --cron /path_to_local_work_directory/cache wasabi_eu_open_p2_synop_ship_without_japan wasabi_eu japan.meteorological.agency.open.data.eu.central.1 p2 16 inclusive_pattern.txt exclusive_pattern.txt 1>>/path_to_local_work_directory/log/sub_wasabi_eu_open_p2_synop_ship_without_japan_stdout.log 2>>/path_to_local_work_directory/log/sub_wasabi_eu_open_p2_synop_ship_without_japan_stderr.log
+
+:wq
+
+```
+
+### Cost of cloud object storage
+
+[only $5.99 per month](https://wasabi.com/cloud-storage-pricing/)
+
+# Monitor and Dataset API on cloud
+
+## Monitor on cloud
+
+Monitor on cloud is [here](https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/org/meteorological_visualizer.html). 
+
+![monitor](cloud_project_img/monitor.png)
+
+## Dataset API
+
+Dataset API is [here](https://arrow.apache.org/docs/python/dataset.html). Dataset API is being evaluated.
+
+# manual on cloud
+
+## Publish/Subscribe/Clone (not using MQPs)
+
+### publish to cloud
+
+A reference implementation is [pub.sh](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/pub.sh). The protocol to publish is as follows.
+
+1. upload data files.
+2. upload a file of a list of the uploaded data files to the directory of "4PubSub/p[1-9]". The name of the file is YYYYMMDDHHMMSS.txt.
+
+### subscribe from cloud
+
+A reference implementation is [sub.sh](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/sub.sh). The protocol to subscribe is as follows.
+
+1. download a current list of the index files in "4PubSub/p[1-9]"
+2. get the newly created list of the index files by comparing the previous list with the current list.
+3. download newly created index files from the directory of "4PubSub/p[1-9] ".
+4. download data files that are linked in each index files.
+
+### clone cloud to cloud
+
+A reference implementation is [clone.sh](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/clone.sh). The protocol to clone is as follows.
+
+1. download a current list of the index files in "4PubSub/p[1-9]"
+2. get the newly created list of the index files by comparing the previous list with the current list.
+3. download newly created index files from the directory of "4PubSub/p[1-9] ".
+4. copy data files that are linked in each index files from source cloud to destination cloud.
+5. upload a file of a list of the copied data files to the directory of "4PubSub/p[1-9]". The name of the file is YYYYMMDDHHMMSS.txt.
+
+## directory name convention
+
+A reference implementation is [met_pre_batch_to_cache.py](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/met_pre_batch_to_cache.py). The convention is as follows. 
+
+1. [bucket]/[indicator]/[format]/[category]/[subcategory]/[year+month+day+hour+minute]/
+2. [bucket] is bucket of cloud storage.
+3. [indicator] is uppercase.
+4. [format]/[category]/[subcategory] is lowercase.
+5. [format] is 'alphanumeric' or 'bufr' or 'crex' or 'grib' or 'iwxxm'.
+
+
