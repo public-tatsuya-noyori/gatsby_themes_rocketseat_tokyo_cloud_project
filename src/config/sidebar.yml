@@ -6,6 +6,8 @@
   items:
     - label: 'Cloud project'
       link: '/cloud_project'
+    - label: 'Pub/Sub/Clone operations'
+      link: '/pub_sub_clone_operations'
 - label: Sites
   items:
     - label: AP Northeast 1

@@ -1,0 +1,177 @@
+---
+title: 'Pub/Sub/Clone operations'
+description: 'Pub/Sub/Clone operations'
+---
+
+# Publish/Subscribe/Clone operations
+## Publish/Subscribe/Clone on pont-to-point 
+### Publish
+"A" has main cloud object storage and backup cloud object storage. The diagram of publishing operations are as follows.
+![pub_pub_backup](pub_sub_clone_operations_img/pub_pub_backup.png)
+The diagram on the left is normal operation. The diagram on the right is backup operation.
+The above cloning operations are described in Cron as follows.
+
+```bash
+crontab -e
+
+# retry 3 to A_Main, if all failed, try to A_Backup
+* * * * * pub.sh A_Main || pub.sh A_Main || pub.sh A_Main || pub.sh A_Backup
+
+:wq
+```
+### Subscribe
+"A" has main cloud object storage and backup cloud object storage. The diagram of subscribing operations are as follows.
+![sub_sub_backup](pub_sub_clone_operations_img/sub_sub_backup.png)
+The diagram on the left is normal operation. The diagram on the right is backup operation.
+The above cloning operations are described in Cron as follows.
+
+```bash
+crontab -e
+
+* * * * * sub.sh A_Main
+* * * * * sub.sh A_Backup
+
+:wq
+```
+### Clone
+"A" has main cloud object storage and backup cloud object storage. Also, "B" has main cloud object storage and backup cloud object storage. The diagram of cloning operations are as follows.
+![clone_clone_backup](pub_sub_clone_operations_img/clone_clone_backup.png)
+The diagram on the left is normal operation. The diagram on the right is backup operation.
+The above cloning operations are described in Cron as follows.
+
+```bash
+crontab -e
+
+* * * * * curl --head --retry 3 B_Main && clone.sh A_Main B_Main || clone.sh A_Main B_Backup
+* * * * * curl --head --retry 3 B_Main && clone.sh A_Backup B_Main || clone.sh A_Backup B_Backup
+
+:wq
+```
+## Publish/Clone in area 
+The diagram of publishing/cloning "Not HUB" to "HUB" in area are as follows.
+![not_hub_to_hub_in_area](pub_sub_clone_operations_img/not_hub_to_hub_in_area.png)
+- There are 6 nodes of A B C D E F. 
+- "HUB A" and "HUB B" and "HUB C" have their cloud storage.
+- "Not HUB E" also has his cloud object storage. 
+- "Not HUB D" and "Not HUB F" do not have their cloud storage.
+- "Not HUB D" publish to "HUB B".
+- "Not HUB F" publish to "HUB C".
+- "HUB A" and "HUB B" and "HUB C" clone "Not HUB E" to their own cloud storage.
+A simplified configuration of "Clone A" and "Clone B" and "Clone C" is the following inclusive pattern.
+```inclusive regex pattern
+vi inclusive_pattern.txt
+
+"/E/"
+
+:wq
+```
+## Publish/Clone "HUB" to "HUB" in area
+The diagram of publishing/cloning "HUB" to "HUB" in area are as follows.
+![hub_to_hub_in_area](pub_sub_clone_operations_img/hub_to_hub_in_area.png)
+- "HUB A" clone B and D data on "HUB B" to "HUB A".
+A simplified configuration of "Clone BD2A" is the following inclusive pattern.
+```inclusive regex pattern
+vi inclusive_pattern.txt
+
+"/(B|D)/"
+
+:wq
+```
+- "HUB A" clone C and F data on "HUB C" to "HUB A".
+A simplified configuration of "Clone CF2A" is the following inclusive pattern.
+```inclusive regex pattern
+vi inclusive_pattern.txt
+
+"/(C|F)/"
+
+:wq
+```
+- "HUB B" clone A data on "HUB A" to "HUB B".
+  A simplified configuration of "Clone A2B" is the following inclusive pattern.
+```inclusive regex pattern
+vi inclusive_pattern.txt
+
+"/A/"
+
+:wq
+```
+- "HUB B" clone C and F data on "HUB C" to "HUB B".
+  A simplified configuration of "Clone CF2B" is the following inclusive pattern.
+```inclusive regex pattern
+vi inclusive_pattern.txt
+
+"/(C|F)/"
+
+:wq
+```
+- "HUB C" clone A data on "HUB A" to "HUB C".
+  A simplified configuration of "Clone A2C" is the following inclusive pattern.
+```inclusive regex pattern
+vi inclusive_pattern.txt
+
+"/A/"
+
+:wq
+```
+- "HUB C" clone B and D data on "HUB B" to "HUB C".
+  A simplified configuration of "Clone BD2C" is the following inclusive pattern.
+```inclusive regex pattern
+vi inclusive_pattern.txt
+
+"/(B|D)/"
+
+:wq
+```
+
+## Clone circularly between 3 areas
+The diagram of cloning circularly between 3 areas are as follows.
+![circulation_between_3_areas](pub_sub_clone_operations_img/circulation_between_3_areas.png)
+- "HUB A" and "HUB B" and "HUB C" clone data except "Area 1" data to their cloud storage.
+  A simplified configuration of "Clone 3to1" is the following exclusive pattern.
+```exclusive regex pattern
+vi exclusive_pattern.txt
+
+"/(A|B|C|D|E|F)/"
+
+:wq
+```
+- "HUB H" and "HUB G" and "HUB I" clone data except "Area 2" data to their cloud storage.
+  A simplified configuration of "Clone 1to2" is the following exclusive pattern.
+```exclusive regex pattern
+vi exclusive_pattern.txt
+
+"/(G|H|I|J|K|L)/"
+
+:wq
+```
+- "HUB M" and "HUB N" and "HUB O" clone data except "Area 3" data to their cloud storage.
+  A simplified configuration of "Clone 2to3" is the following exclusive pattern.
+```exclusive regex pattern
+vi exclusive_pattern.txt
+
+"/(M|N|O|P|Q|R)/"
+
+:wq
+```
+The detailed diagram of cloning circularly between 3 areas are as follows.
+![detailed_circulation_between_3_areas](pub_sub_clone_operations_img/detailed_circulation_between_3_areas.png)
+Normally, "HUB H" clone data of "HUB B" to "HUB H". "HUB H" backup diagram of cloning circularly between 3 areas are as follows.
+![detailed_circulation_between_3_areas](pub_sub_clone_operations_img/detailed_backup_circulation_between_3_areas.png)
+The above cloning operations are described in Cron as follows.
+
+```bash
+crontab -e
+
+* * * * * curl --head --retry 3 HUB_B && switchable_clone.sh HUB_B HUB_H || switchable_clone.sh HUB_A HUB_H
+
+:wq
+```
+## To reduce maintenace cost of the routing catalogues
+To reduce maintenace cost of [the routing catalogues](https://community.wmo.int/activity-areas/operational-information-service/routing-catalogues), the following items are needed.
+- [list of CCCC pattern](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/tests/cccc_pattern.txt)
+- directory path convention
+- inclusive pattern filter
+- exclusive pattern filter
+- triangle circulation
+
+Duplicate checking is not needed by using inclusive pattern filter and exclusive pattern filter. If duplicate checking is needed, delete --no-check-dest of rclone option in pub.sh/sub.sh/clone.sh. In the case of deletion of --no-check-dest, the transfer speed would be slower.
