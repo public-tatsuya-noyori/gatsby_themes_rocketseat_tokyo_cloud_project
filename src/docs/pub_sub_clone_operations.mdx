@@ -14,8 +14,8 @@ The above cloning operations are described in Cron as follows.
 ```bash
 crontab -e
 
-# retry 3 to A_Main, if all failed, try to A_Backup
-* * * * * pub.sh A_Main || pub.sh A_Main || pub.sh A_Main || pub.sh A_Backup
+# retry 1 to A_Main, if all failed, try to A_Backup
+* * * * * pub.sh A_Main || pub.sh A_Main || pub.sh A_Backup
 
 :wq
 ```
@@ -42,8 +42,9 @@ The above cloning operations are described in Cron as follows.
 ```bash
 crontab -e
 
-* * * * * curl --head --retry 3 B_Main && clone.sh A_Main B_Main || clone.sh A_Main B_Backup
-* * * * * curl --head --retry 3 B_Main && clone.sh A_Backup B_Main || clone.sh A_Backup B_Backup
+# retry 1 to B_Main, if all failed, try to B_Backup
+* * * * * clone.sh A_Main B_Main   || clone.sh A_Main B_Main   || clone.sh A_Main B_Backup
+* * * * * clone.sh A_Backup B_Main || clone.sh A_Backup B_Main || clone.sh A_Backup B_Backup
 
 :wq
 ```
@@ -162,7 +163,8 @@ The above cloning operations are described in Cron as follows.
 ```bash
 crontab -e
 
-* * * * * curl --head --retry 3 HUB_B && switchable_clone.sh HUB_B HUB_H || switchable_clone.sh HUB_A HUB_H
+# retry 1 from HUB_B, if all failed, try from HUB_A.
+* * * * * clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_A HUB_H
 
 :wq
 ```

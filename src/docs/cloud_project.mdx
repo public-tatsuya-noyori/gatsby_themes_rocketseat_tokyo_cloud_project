@@ -182,33 +182,67 @@ Dataset API is [here](https://arrow.apache.org/docs/python/dataset.html). Datase
 
 # manual on cloud
 
-## Publish/Subscribe/Clone (not using MQPs)
+## Publish/Subscribe/Clone
 
 ### publish to cloud
 
 A reference implementation is [pub.sh](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/pub.sh). The protocol to publish is as follows.
 
 1. upload data files.
+```
+rclone copy --files-from-raw list_of_p1_files.txt directory_of_p1_files/ wasabi:japan.meteorological.agency.open.data
+```
 2. upload a file of a list of the uploaded data files to the directory of "4PubSub/p[1-9]". The name of the file is YYYYMMDDHHMMSS.txt.
-
+```
+rclone copyto list_of_p1_files.txt wasabi:japan.meteorological.agency.open.data/4PubSub/p1/20201130013805.txt
+```
 ### subscribe from cloud
 
 A reference implementation is [sub.sh](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/sub.sh). The protocol to subscribe is as follows.
 
 1. download a current list of the index files in "4PubSub/p[1-9]"
+```
+rclone lsf wasabi:japan.meteorological.agency.open.data/4PubSub/p1 > current_p1_list.txt
+```
 2. get the newly created list of the index files by comparing the previous list with the current list.
+```
+diff previous_p1_list.txt current_p1_list.txt | grep '>' | cut -c3- > newly_created_p1_index_list.txt
+```
 3. download newly created index files from the directory of "4PubSub/p[1-9] ".
+```
+rclone copy --files-from-raw newly_created_p1_index_list.txt wasabi:japan.meteorological.agency.open.data local_p1_index_directory/
+```
 4. download data files that are linked in each index files.
+```
+ls -1 local_p1_index_directory/* | cat > newly_created_p1_list.txt
+rclone copy --files-from-raw newly_created_p1_list.txt wasabi:japan.meteorological.agency.open.data local_p1_directory/
+```
 
 ### clone cloud to cloud
 
 A reference implementation is [clone.sh](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/clone.sh). The protocol to clone is as follows.
 
 1. download a current list of the index files in "4PubSub/p[1-9]"
+```
+rclone lsf wasabi:japan.meteorological.agency.open.data/4PubSub/p1 > current_p1_list.txt
+```
 2. get the newly created list of the index files by comparing the previous list with the current list.
+```
+diff previous_p1_list.txt current_p1_list.txt | grep '>' | cut -c3- > newly_created_p1_index_list.txt
+```
 3. download newly created index files from the directory of "4PubSub/p[1-9] ".
+```
+rclone copy --files-from-raw newly_created_p1_index_list.txt wasabi:japan.meteorological.agency.open.data local_p1_index_directory/
+```
 4. copy data files that are linked in each index files from source cloud to destination cloud.
+```
+ls -1 local_p1_index_directory/* | cat > newly_created_p1_list.txt
+rclone copy --files-from-raw newly_created_p1_list.txt wasabi:japan.meteorological.agency.open.data wasabi_us:japan.meteorological.agency.open.data.us.east.1
+```
 5. upload a file of a list of the copied data files to the directory of "4PubSub/p[1-9]". The name of the file is YYYYMMDDHHMMSS.txt.
+```
+rclone copyto newly_created_p1_list.txt wasabi_us:japan.meteorological.agency.open.data.us.east.1/4PubSub/p1/20201130020308.txt
+```
 
 ## directory name convention
 
