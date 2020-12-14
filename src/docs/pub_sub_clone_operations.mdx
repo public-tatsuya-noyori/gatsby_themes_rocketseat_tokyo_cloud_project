@@ -163,8 +163,8 @@ The above cloning operations are described in Cron as follows.
 ```bash
 crontab -e
 
-# retry 1 from HUB_B, if all failed, try from HUB_A.
-* * * * * clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_A HUB_H
+# retry 1 from HUB_B, if failed from HUB_B, try from HUB_A. if faild from HUB_A, try from HUB_C
+* * * * * clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_A HUB_H || clone.sh --switchable --permit_empty_newly_index HUB_C HUB_H
 
 :wq
 ```

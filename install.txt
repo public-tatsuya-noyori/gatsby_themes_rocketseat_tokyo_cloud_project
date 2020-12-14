@@ -1,0 +1,6 @@
+sudo apt install nodejs
+sudo apt install npm
+sudo npm install -g gatsby-cli
+git clone https://github.com/public-tatsuya-noyori/gatsby_themes_rocketseat_tokyo_cloud_project
+cd gatsby_themes_rocketseat_tokyo_cloud_project
+npm install
