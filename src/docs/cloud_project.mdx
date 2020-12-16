@@ -118,7 +118,7 @@ storage_class =
 
 Download [pub.sh](https://raw.githubusercontent.com/public-tatsuya-noyori/meteorological_preprocessor/master/src/meteorological_preprocessor/pub.sh)/[sub.sh](https://raw.githubusercontent.com/public-tatsuya-noyori/meteorological_preprocessor/master/src/meteorological_preprocessor/sub.sh)/[clone.sh](https://raw.githubusercontent.com/public-tatsuya-noyori/meteorological_preprocessor/master/src/meteorological_preprocessor/clone.sh)
 
-### Configure Cron
+### Configure Cron to subscribe
 
 A sample configuration of the Cron to subscribe p3 data files are as follows.
 
@@ -164,9 +164,65 @@ $ crontab -e
 
 ```
 
+### Find data
+
+A sample command to find /bufr/satellite/asr/ data is as follows.
+
+```bash
+
+rclone lsf wasabi:japan.meteorological.agency.open.data/4PubSub/p4 | xargs -n1 -I{} rclone cat wasabi:japan.meteorological.agency.open.data/4PubSub/p4/{} | grep /bufr/satellite/asr/
+
+```
+
+### Store data with directory name convention
+
+Install met_pre_batch_to_cache
+
+```bash
+
+git clone https://github.com/public-tatsuya-noyori/meteorological_preprocessor
+cd meteorological_preprocessor
+pip3 install .
+
+```
+Run met_pre_batch_to_cache to store data with directory name convention
+
+```bash
+
+met_pre_batch_to_cache RJTD input_file_directory/WMO_Alphanumeric_SYNOP_FILES_or_WMO_BATCHED_FTP_SYNOP_FILES store_directory 1> list_to_publish.txt
+
+```
+
+### Publish
+
+A sample command to publish stored data with directory name convention to cloud object storage
+
+```bash
+
+/path_to_sh/pub.sh store_directory list_to_publish.txt wasabi japan.meteorological.agency.open.data p2 8
+
+```
+
+### Configure Cron to clone
+
+A sample configuration of Cron to clone p2 data from wasabi:japan.meteorological.agency.open.data to wasabi_us:japan.meteorological.agency.open.data.us.east.1
+
+```bash
+
+$ crontab -e
+
+* * * * * /path_to_sh/clone.sh --cron /path_to_local_work_directory/cache wasabi_to_wasabi_us_p2 wasabi japan.meteorological.agency.open.data wasabi_us japan.meteorological.agency.open.data.us.east.1  p2 8
+
+:wq
+
+```
+
+
 ### Cost of cloud object storage
 
-[only $5.99 per month](https://wasabi.com/cloud-storage-pricing/)
+wasabi is [$5.99 per 1TB month](https://wasabi.com/cloud-storage-pricing/)
+
+[cloud object storage comparison](https://www.qualeed.com/en/qbackup/cloud-storage-comparison/)
 
 # Monitor and Dataset API on cloud
 
@@ -247,11 +303,12 @@ rclone copyto newly_created_p1_list.txt wasabi_us:japan.meteorological.agency.op
 ## directory name convention
 
 A reference implementation is [met_pre_batch_to_cache.py](https://github.com/public-tatsuya-noyori/meteorological_preprocessor/blob/master/src/meteorological_preprocessor/met_pre_batch_to_cache.py). The convention is as follows. 
+The directory name convention is required for post-processing. Currently, the directory name convention is done in [conf_batch_to_cache.csv](https://raw.githubusercontent.com/public-tatsuya-noyori/meteorological_preprocessor/master/src/meteorological_preprocessor/conf_batch_to_cache.csv).
 
 1. [bucket]/[indicator]/[format]/[category]/[subcategory]/[year+month+day+hour+minute]/
 2. [bucket] is bucket of cloud storage.
-3. [indicator] is uppercase.
+3. [indicator] is uppercase. An example is 'RJTD'.
 4. [format]/[category]/[subcategory] is lowercase.
 5. [format] is 'alphanumeric' or 'bufr' or 'crex' or 'grib' or 'iwxxm'.
-
-
+6. [category] is lowercase.
+7. [subcategory] is lowercase.
