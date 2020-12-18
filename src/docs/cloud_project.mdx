@@ -62,6 +62,17 @@ In this evaluation, all GTS data files are published/subscribed/cloned using the
 | p4       | 1m                 | 3m19s                                                        | 18m7s                                                        | 155355                                        | 64                               |
 | p5       | 1m                 | 15m30s                                                       | 29m1s                                                        | 47763                                         | 32                               |
 
+
+| priority | execution interval | average transfer time(2020/12/17)<br/>(local PC -> ap-northeast -> us-east -> eu-central) | maximum transfer time(2020/12/17)<br/>(local PC -> ap-northeast -> us-east -> eu-central) | The number of open data<br/>files(2020/12/17) | The number of parallel transfers |
+| -------- | ------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------- | -------------------------------- |
+| p1       | 15s                | 49s                                                          | 70s                                                          | 215                                           | 4                                |
+| p2       | 1m                 | 3m6s                                                         | 5m15s                                                        | 35132                                         | 8                                |
+| p3       | 1m                 | 3m7s                                                         | 4m11s                                                        | 38603                                         | 16                               |
+| p4       | 1m                 | 3m24s                                                        | 18m31s                                                       | 158805                                        | 64                               |
+| p5       | 1m                 | 18m44s                                                       | 27m46s                                                        | 58926                                         | 32                               |
+
+
+
 ## How to publish/subscribe/clone on cloud
 
 ### Install rclone
