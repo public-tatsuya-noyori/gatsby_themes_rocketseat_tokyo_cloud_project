@@ -181,7 +181,7 @@ A sample command to find /bufr/satellite/asr/ data is as follows.
 
 ```bash
 
-rclone lsf wasabi:japan.meteorological.agency.open.data/4PubSub/p4 | xargs -n1 -I{} rclone cat wasabi:japan.meteorological.agency.open.data/4PubSub/p4/{} | grep /bufr/satellite/asr/
+(rclone lsf wasabi:japan.meteorological.agency.open.data/4Find/p4 | xargs -n1 -I{} rclone cat wasabi:japan.meteorological.agency.open.data/4Find/p4; rclone lsf wasabi:japan.meteorological.agency.open.data/4PubSub/p4 | xargs -n1 -I{} rclone cat wasabi:japan.meteorological.agency.open.data/4PubSub/p4) | grep /bufr/satellite/asr/
 
 ```
 
