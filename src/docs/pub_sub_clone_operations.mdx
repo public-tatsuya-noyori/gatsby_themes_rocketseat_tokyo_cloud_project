@@ -12,12 +12,13 @@ The diagram on the left is normal operation. The diagram on the right is backup 
 The above cloning operations are described in Cron as follows.
 
 ```bash
-crontab -e
 
-# retry 1 to A_Main, if all failed, try to A_Backup
-* * * * * pub.sh A_Main || pub.sh A_Main || pub.sh A_Backup
+$ /path_to_sh/pub.sh --help
+/path_to_sh/pub.sh [--bnadwidth_limit bandwidth_limit_k_bytes_per_s] [--cron] [--debug_shell] [--rm_input_index_file] [--wildcard_index] local_work_directory unique_job_name input_index_file 'destination_rclone_remote_bucket_main[;destination_rclone_remote_bucket_sub]' priority parallel
 
-:wq
+[example]
+/path_to_sh/pub.sh local_directory pub_p2 input_index_file.txt 'iij1:japan.meteorological.agency.1.open.data.i;iij2:japan.meteorological.agency.2.open.data.i' p2 16
+
 ```
 ### Subscribe
 "A" has main cloud object storage and backup cloud object storage. The diagram of subscribing operations are as follows.
@@ -26,10 +27,14 @@ The diagram on the left is normal operation. The diagram on the right is backup 
 The above cloning operations are described in Cron as follows.
 
 ```bash
+
+$ /path_to_sh/sub.sh --help
+/path_to_sh/sub.sh [--bnadwidth_limit bandwidth_limit_k_bytes_per_s] [--cron] [--debug_shell] [--debug_index_file] [--standard_output_processed_file] [--urgent] [--wildcard_index] local_work_directory unique_job_name 'source_rclone_remote_bucket_main[;source_rclone_remote_bucket_sub][;;backup_source_rclone_remote_bucket_main[;backup_source_rclone_remote_bucket_sub]]' priority parallel [inclusive_pattern_file] [exclusive_pattern_file]
+
+[example]
 crontab -e
 
-* * * * * sub.sh A_Main
-* * * * * sub.sh A_Backup
+* * * * * /path_to_sh/sub.sh --cron /local_work_directory/ sub_p2 'iij1:japan.meteorological.agency.1.open.data.i;iij2:japan.meteorological.agency.2.open.data.i' p2 16
 
 :wq
 ```
@@ -40,11 +45,14 @@ The diagram on the left is normal operation. The diagram on the right is backup 
 The above cloning operations are described in Cron as follows.
 
 ```bash
+
+$ /path_to_sh/clone.sh --help
+/path_to_sh/clone.sh [--bnadwidth_limit bandwidth_limit_k_bytes_per_s] [--cron] [--debug_shell] [--debug_index_file] [--standard_output_processed_file] [--urgent] [--wildcard_index] local_work_directory unique_job_name 'source_rclone_remote_bucket_main[;source_rclone_remote_bucket_sub][;;backup_source_rclone_remote_bucket_main[;backup_source_rclone_remote_bucket_sub]]' 'destination_rclone_remote_bucket_main[;destination_rclone_remote_bucket_sub]' priority parallel [inclusive_pattern_file] [exclusive_pattern_file]
+
+[example]
 crontab -e
 
-# retry 1 to B_Main, if all failed, try to B_Backup
-* * * * * clone.sh A_Main B_Main   || clone.sh A_Main B_Main   || clone.sh A_Main B_Backup
-* * * * * clone.sh A_Backup B_Main || clone.sh A_Backup B_Main || clone.sh A_Backup B_Backup
+* * * * * /path_to_sh/clone.sh --cron /local_work_directory/ clone_p2 'iij1:japan.meteorological.agency.1.open.data.i;iij2:japan.meteorological.agency.2.open.data.i' 'rakuten1:japan.meteorological.agency.1.open.data.o;rakuten2:japan.meteorological.agency.2.open.data.o' p2 16
 
 :wq
 ```
@@ -161,10 +169,10 @@ Normally, "HUB H" clone data of "HUB B" to "HUB H". "HUB H" backup diagram of cl
 The above cloning operations are described in Cron as follows.
 
 ```bash
+[example]
 crontab -e
 
-# retry 1 from HUB_B, if failed from HUB_B, try from HUB_A. if faild from HUB_A, try from HUB_C
-* * * * * clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_B HUB_H || clone.sh --switchable HUB_A HUB_H || clone.sh --switchable --permit_empty_newly_index HUB_C HUB_H
+* * * * * /path_to_sh/clone.sh --cron /local_work_directory/ clone_p2 'iij1:not_japan_1.meteorological.agency.1.open.data.i;iij2:not_japan_1.meteorological.agency.2.open.data.i;;wasabi1:not_japan_2.meteorological.agency.1.open.data;wasabi2:not_japan_2.meteorological.agency.2.open.data' 'rakuten1:japan.meteorological.agency.1.open.data.o;rakuten2:japan.meteorological.agency.2.open.data.o' p2 16
 
 :wq
 ```
@@ -175,5 +183,3 @@ To reduce maintenace cost of [the routing catalogues](https://community.wmo.int/
 - inclusive pattern filter
 - exclusive pattern filter
 - triangle circulation
-
-Duplicate checking is not needed by using inclusive pattern filter and exclusive pattern filter. If duplicate checking is needed, delete --no-check-dest of rclone option in pub.sh/sub.sh/clone.sh. In the case of deletion of --no-check-dest, the transfer speed would be slower.
