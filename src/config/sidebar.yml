@@ -10,14 +10,10 @@
       link: '/pub_sub_clone_operations'
 - label: Sites
   items:
-    - label: AP Northeast 1
-      link: https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/ap-northeast-1.html
-    - label: US East 1
-      link: https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/us-east-1.html
-    - label: EU Central 1
-      link: https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/eu-central-1.html
-    - label: Monitor on cloud
-      link: https://s3.ap-northeast-1.wasabisys.com/japan.meteorological.agency.open.data.aws.js.s3.explorer/org/meteorological_visualizer.html
+    - label: Japan meteorological agency open data 1
+      link: https://ap1.dag.iijgio.com/japan.meteorological.agency.1.site/iij1.japan.meteorological.agency.1.open.data.i.html
+    - label: Japan meteorological agency open data 2
+      link: https://ap2.dag.iijgio.com/japan.meteorological.agency.2.site/iij2.japan.meteorological.agency.2.open.data.i.html
 - label: Community
   items:
     - label: 'Github'
