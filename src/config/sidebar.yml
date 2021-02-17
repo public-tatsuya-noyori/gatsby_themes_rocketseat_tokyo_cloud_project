@@ -14,6 +14,8 @@
       link: https://ap1.dag.iijgio.com/japan.meteorological.agency.1.site/iij1.japan.meteorological.agency.1.open.data.i.html
     - label: Japan meteorological agency open data 2
       link: https://ap2.dag.iijgio.com/japan.meteorological.agency.2.site/iij2.japan.meteorological.agency.2.open.data.i.html
+    - label: monitor
+      link: https://ap1.dag.iijgio.com/japan.meteorological.agency.1.site/monitor/meteorological_visualizer.html
 - label: Community
   items:
     - label: 'Github'
